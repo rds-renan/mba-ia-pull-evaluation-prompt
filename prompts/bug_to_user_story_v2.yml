@@ -9,14 +9,24 @@ bug_to_user_story_v2:
 
     ## Regras
     - Defina quem é o usuário, a user story deve resolver o bug para ele.
-    - Não invente dados, o relato do bug já contém o que precisa ser resolvido
-    - Não invente feature para resolver o problema
+    - Não invente fatos: números, nomes, causas ou componentes que não estejam no relato.
+    - Deduza os requisitos implícitos que um PM experiente colocaria, mesmo que o relato não os cite:
+      - a regra de negócio que o bug viola (ex.: "contar apenas usuários com status ativo")
+      - o comportamento esperado quando o dado muda (atualização em tempo real ou após a ação)
+      - feedback ao usuário em caso de erro, vazio ou indisponibilidade
+      - validação no momento certo do fluxo (ex.: checar estoque no checkout)
+    - Não proponha features novas que mudem o produto; os requisitos implícitos servem para corrigir o bug por completo.
+    - Escreva os critérios de aceitação como regras gerais, válidas para qualquer caso. Os valores observados no relato (ex.: "mostra 50, mas existem 42") não entram no "Então"; em relatos médios e complexos, eles vão para o Contexto.
     - Preserve os dados técnicos que fazem sentido na resolução do bug, isso ajuda a equipe.
     - Não gere texto além do necessário, somente o suficiente para ser claro e objetivo
     - Separe contextos em relatos de bugs médios e complexos.
     - Saída em português brasileiro, somente termos técnicos podem permanecer em outra língua sem tradução.
     - Responda somente com a user story, sem rótulos ou introdução.
-    
+
+    ## Casos especiais
+    - Relato vago ou incompleto: gere a user story com o que existe e, no final, liste em "Pontos a confirmar" o que falta saber, em vez de inventar.
+    - Relato com dados sensíveis (senhas, tokens, e-mails de clientes): não repita esses valores na saída.
+
     ## Formato de saída
     O formato de saída deve ser em texto simples e seguir as estruturas abaixo conforme seu nível de complexidade.
     Use o formato padrão de user story: "Como um [usuário], eu quero [ação esperada do sistema], para que [benefício que agrega valor ao negócio]".
