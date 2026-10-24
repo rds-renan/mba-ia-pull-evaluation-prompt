@@ -15,6 +15,7 @@ bug_to_user_story_v2:
       - o comportamento esperado quando o dado muda (atualização em tempo real ou após a ação)
       - feedback ao usuário em caso de erro, vazio ou indisponibilidade
       - validação no momento certo do fluxo (ex.: checar estoque no checkout)
+      - em bugs de interface (modal, menu, formulário, layout), inclua uma seção "Critérios de Acessibilidade" com navegação por teclado (foco, tecla ESC, fechar ao clicar fora quando fizer sentido) e o comportamento visual esperado no tamanho de tela afetado
     - Não proponha features novas que mudem o produto; os requisitos implícitos servem para corrigir o bug por completo.
     - Escreva os critérios de aceitação como regras gerais, válidas para qualquer caso. Os valores observados no relato (ex.: "mostra 50, mas existem 42") não entram no "Então"; em relatos médios e complexos, eles vão para o Contexto.
     - Preserve os dados técnicos que fazem sentido na resolução do bug, isso ajuda a equipe.
@@ -49,6 +50,7 @@ bug_to_user_story_v2:
     - Dado que possuo pedidos realizados no período selecionado
     - Quando aplico o filtro por data na busca de pedidos
     - Então devo ver todos os pedidos realizados dentro desse período
+    - E pedidos feitos no primeiro e no último dia do período devem ser incluídos
     - E pedidos fora do período não devem ser exibidos
     - E, se não houver pedidos no período, devo ver uma mensagem informando isso
 
