@@ -22,7 +22,14 @@ O enunciado original do desafio está em `README_old.md`.
 
 Os exemplos foram criados do zero, com domínios diferentes dos usados no dataset, para não dar ao modelo as respostas da avaliação.
 
-Cada exemplo usa apenas informações do próprio relato. Isso foi feito de propósito: o modelo imita os exemplos, então se eles inventassem números ou prazos, o modelo aprenderia a inventar também. A métrica de Precision penaliza isso.
+Os exemplos não inventam fatos: números, prazos e causas vêm só do próprio relato. Isso foi feito de propósito: o modelo imita os exemplos, então se eles inventassem números ou prazos, o modelo aprenderia a inventar também. A métrica de Precision penaliza isso.
+
+Mas os exemplos mostram deduções que um PM faria, mesmo sem estarem escritas no relato. No exemplo simples, por exemplo, o relato só diz que o filtro não retorna nada, e os critérios incluem:
+
+- pedidos do primeiro e do último dia do período devem aparecer (erro comum em filtros de data);
+- se não houver pedidos no período, o usuário deve ver uma mensagem.
+
+Assim o modelo aprende a diferença entre inventar um fato e completar o requisito.
 
 ### Role Prompting
 
@@ -59,10 +66,21 @@ Em vez de só dizer o cargo, a persona descreve o que essa pessoa faz e o que en
 
 Não é uma das técnicas da lista do desafio, mas é um requisito do prompt. A seção de regras foi escrita pensando nas métricas:
 
-- "Não invente dados" e "Não invente feature": para a métrica de Precision, que penaliza alucinação.
+- "Não invente fatos" e "Não proponha features novas": para a métrica de Precision, que penaliza alucinação.
+- "Deduza os requisitos implícitos que um PM experiente colocaria": para o F1-Score. A regra lista onde procurar: a regra de negócio que o bug viola, quando o dado deve refletir a mudança, a mensagem ao usuário em caso de erro e em que momento do fluxo validar.
+- "Em bugs de interface, inclua Critérios de Acessibilidade": para o F1-Score, já que as referências de bugs de tela cobram navegação por teclado (foco, ESC, fechar ao clicar fora).
+- "Escreva os critérios de aceitação como regras gerais": para o modelo não colocar os valores do relato (ex.: "mostra 50, mas existem 42") no "Então". Esses valores vão para o contexto.
 - "Preserve os dados técnicos": para o F1-Score, já que as referências do dataset repetem os detalhes técnicos do relato (endpoint, erro, causa).
 - "Não gere texto além do necessário": para a métrica de Clarity, que avalia concisão.
 - "Responda somente com a user story, sem rótulos ou introdução": para a saída não começar com "Aqui está a user story:" ou "User story:", que não existem nas referências.
+
+O prompt também tem uma seção de casos especiais: se o relato for vago, o modelo lista o que falta em "Pontos a confirmar" em vez de inventar; se tiver dados sensíveis (senhas, tokens, e-mails), não os repete na saída.
+
+### Como cheguei nas regras finais
+
+A primeira versão das regras era rígida: "Não invente dados, o relato do bug já contém o que precisa ser resolvido". A Precision ficou alta, mas o F1-Score de alguns exemplos ficou abaixo de 0.8. O pior foi 0.75, e o reasoning do avaliador explicava o motivo: faltavam requisitos que não estavam no relato, mas que um PM colocaria (no bug do dashboard, "atualizar em tempo real" e "contar só usuários com status ativo"), e os critérios repetiam os números do relato em vez de regras gerais.
+
+A correção foi separar "inventar fatos" (proibido) de "deduzir requisitos implícitos" (esperado), e pedir critérios como regras gerais. Depois disso, só um exemplo ficou abaixo de 0.8 (0.77): o bug do modal atrás do menu lateral, em que faltaram critérios de acessibilidade. Adicionei a regra de acessibilidade só para bugs de interface, para não aparecer acessibilidade em bugs de backend. Por último, coloquei no exemplo simples a dedução sobre o primeiro e o último dia do período. Na avaliação final, todos os exemplos ficaram com F1 de 0.84 ou mais.
 
 ## Resultados Finais
 
@@ -74,13 +92,96 @@ https://smith.langchain.com/public/bd60215c-7ce6-4b36-b295-a78e9261cc23/d
 
 | Métrica | v1 | v2 |
 |---|---|---|
-| Helpfulness | | |
-| Correctness | | |
-| F1-Score | | |
-| Clarity | | |
-| Precision | | |
+| Helpfulness | 0.95 | 0.98 |
+| Correctness | 0.76 | 0.94 |
+| F1-Score | 0.59 | 0.90 |
+| Clarity | 0.96 | 0.97 |
+| Precision | 0.94 | 0.99 |
 
-[adicionar screenshots das avaliações]
+```
+==================================================
+AVALIAÇÃO DE PROMPTS OTIMIZADOS
+==================================================
+
+Provider: google
+Modelo Principal: gemini-2.5-flash
+Modelo de Avaliação: gemini-3.8-flash
+
+Criando dataset de avaliação: mba-ia-pull-evaluation-prompt-eval...
+   ✓ Carregados 15 exemplos do arquivo datasets/bug_to_user_story.jsonl
+   ✓ Dataset 'mba-ia-pull-evaluation-prompt-eval' já existe, usando existente
+   ✓ https://smith.langchain.com/o/6b7eb784-e84b-4115-abc7-f0d9253c3c63/datasets/b243c3f3-26bf-45bf-9273-b7e600e4d7d9
+
+======================================================================
+PROMPTS PARA AVALIAR
+======================================================================
+
+Este script irá puxar prompts do LangSmith Hub.
+Certifique-se de ter feito push dos prompts antes de avaliar:
+  python src/push_prompts.py
+
+
+🔍 Avaliando: renan-souza/bug_to_user_story_v2
+   Puxando prompt do LangSmith Hub: renan-souza/bug_to_user_story_v2
+   ✓ Prompt carregado com sucesso
+   Rodando experimento no LangSmith...
+View the evaluation results for experiment: 'renan-souza-bug_to_user_story_v2-eaf11e42' at:
+https://smith.langchain.com/o/6b7eb784-e84b-4115-abc7-f0d9253c3c63/datasets/b243c3f3-26bf-45bf-9273-b7e600e4d7d9/compare?selectedSessions=418d5b3d-bb70-46f7-b77b-03b1fe66c496
+
+
+[1] F1:0.85 Clarity:0.95 Precision:0.98
+[2] F1:0.91 Clarity:0.90 Precision:1.00
+[3] F1:0.94 Clarity:0.98 Precision:1.00
+[4] F1:0.91 Clarity:0.98 Precision:1.00
+[5] F1:0.87 Clarity:0.98 Precision:0.98
+[6] F1:0.88 Clarity:0.98 Precision:1.00
+[7] F1:0.94 Clarity:0.98 Precision:1.00
+[8] F1:0.84 Clarity:0.98 Precision:0.97
+[9] F1:0.90 Clarity:0.95 Precision:0.97
+[10] F1:0.84 Clarity:0.98 Precision:0.98
+[11] F1:0.85 Clarity:0.98 Precision:0.97
+[12] F1:0.97 Clarity:1.00 Precision:1.00
+[13] F1:0.92 Clarity:0.98 Precision:0.97
+[14] F1:0.95 Clarity:1.00 Precision:1.00
+[15] F1:0.90 Clarity:0.98 Precision:0.97
+
+==================================================
+Prompt: renan-souza/bug_to_user_story_v2
+==================================================
+
+Métricas Derivadas:
+  - Helpfulness: 0.98 ✓
+  - Correctness: 0.94 ✓
+
+Métricas Base:
+  - F1-Score: 0.90 ✓
+  - Clarity: 0.97 ✓
+  - Precision: 0.99 ✓
+
+--------------------------------------------------
+📊 MÉDIA GERAL: 0.9556
+--------------------------------------------------
+
+✅ STATUS: APROVADO - Todas as métricas >= 0.8
+
+==================================================
+RESUMO FINAL
+==================================================
+
+Prompts avaliados: 1
+Aprovados: 1
+Reprovados: 0
+
+Resultados no LangSmith (notas gravadas como feedback no experimento):
+  renan-souza/bug_to_user_story_v2
+    https://smith.langchain.com/o/6b7eb784-e84b-4115-abc7-f0d9253c3c63/datasets/b243c3f3-26bf-45bf-9273-b7e600e4d7d9/compare?selectedSessions=418d5b3d-bb70-46f7-b77b-03b1fe66c496
+
+✅ Todos os prompts atingiram todas as métricas >= 0.8!
+```
+
+![alt text](image.png)
+
+![alt text](image-1.png)
 
 ### Comparação entre v1 e v2
 
@@ -183,3 +284,6 @@ Escolhi a última combinação por ser a mais justa:
 - O `gemini-2.5-flash` aceita `temperature=0` na geração, o que deixa o resultado mais reproduzível.
 
 Todas as comparações entre v1 e v2 foram feitas com essa mesma combinação.
+
+Foi utilizado a versão paga do `gemini`, o custo foi menos de R$8,00, contando junto o teste entre modelos de LLM.
+![alt text](image-2.png)
